@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="离线安全检查工作流控制台">
+  <title>Security Workflow Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳转到主内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div><p class="eyebrow">MYAGENT / DAY 15</p><p class="brand-name">安全工作流</p></div>
+      </div>
+      <nav class="nav-list">
+        <a class="nav-item active" href="#overview"><span class="nav-icon" aria-hidden="true">⌂</span>工作流总览</a>
+        <a class="nav-item" href="#inputs"><span class="nav-icon" aria-hidden="true">⌁</span>检查输入</a>
+        <a class="nav-item" href="#findings"><span class="nav-icon" aria-hidden="true">!</span>风险发现</a>
+        <a class="nav-item" href="#events"><span class="nav-icon" aria-hidden="true">≡</span>审计事件</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="status-dot online" aria-hidden="true"></span>
+        <div><strong>本地演示模式</strong><small>无网络扫描 / 无命令执行</small></div>
+      </div>
+      <div class="sidebar-footer">AUTHORIZED LAB ONLY<br><span>v0.1.0 · offline-first</span></div>
+    </aside>
+
+    <main id="main-content" class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SECURITY OPERATIONS / CONSOLE</p>
+          <h1>安全检查工作流</h1>
+        </div>
+        <div class="topbar-actions">
+          <span id="api-status" class="connection-status"><span class="status-dot" aria-hidden="true"></span>连接检测中</span>
+          <button id="run-top" class="button button-primary" type="button">运行检查 <span aria-hidden="true">↗</span></button>
+        </div>
+      </header>
+
+      <section id="overview" class="intro-row" aria-labelledby="overview-title">
+        <div>
+          <p class="section-kicker">END-TO-END PIPELINE</p>
+          <h2 id="overview-title">从范围校验到可追溯报告</h2>
+          <p class="lede">把侦察、代码审计、JVM 排查、PatchDiff、二进制分析与 SOP 检索串成一个受控流程。所有默认结果均为离线模拟，适合内网靶场验证。</p>
+        </div>
+        <div class="run-meta" aria-live="polite"><span class="status-dot online" aria-hidden="true"></span><span id="run-state">等待运行</span><code id="run-id">RUN —</code></div>
+      </section>
+
+      <section class="metrics-grid" aria-label="风险指标">
+        <article class="metric metric-critical"><span>Critical</span><strong id="metric-critical">0</strong><small>需要立即隔离</small></article>
+        <article class="metric metric-high"><span>High</span><strong id="metric-high">0</strong><small>优先修复</small></article>
+        <article class="metric metric-medium"><span>Medium</span><strong id="metric-medium">0</strong><small>纳入计划</small></article>
+        <article class="metric metric-low"><span>Steps</span><strong id="metric-steps">0</strong><small>已执行工作流节点</small></article>
+      </section>
+
+      <section class="panel workflow-panel" aria-labelledby="workflow-title">
+        <div class="panel-heading"><div><p class="section-kicker">LIVE PIPELINE</p><h2 id="workflow-title">工作流状态</h2></div><span id="workflow-badge" class="badge badge-neutral">未运行</span></div>
+        <div id="workflow-track" class="workflow-track" aria-live="polite"></div>
+      </section>
+
+      <div class="content-grid">
+        <section id="inputs" class="panel inputs-panel" aria-labelledby="inputs-title">
+          <div class="panel-heading"><div><p class="section-kicker">CONTROLLED INPUT</p><h2 id="inputs-title">检查输入</h2></div><span class="badge badge-green">DRY RUN</span></div>
+          <form id="workflow-form">
+            <div class="form-grid">
+              <label>目标主机 <span class="required">*</span><input name="target" value="10.0.0.5" required autocomplete="off"><small>仅接受 IP 或主机名；不会发起真实网络连接。</small></label>
+              <label>检查目标<input name="objective" value="在授权实验靶机上进行安全检查" autocomplete="off"></label>
+            </div>
+            <label>待审计代码<textarea name="code" rows="7" spellcheck="false"></textarea></label>
+            <div class="form-grid">
+              <label>Patch Diff<textarea name="diff" rows="5" spellcheck="false"></textarea></label>
+              <label>外部日志<textarea name="logs" rows="5" spellcheck="false"></textarea></label>
+            </div>
+            <div class="form-grid">
+              <label>IDA 伪代码<textarea name="pseudocode" rows="4" spellcheck="false"></textarea></label>
+              <label>SOP 问题<textarea name="question" rows="4"></textarea></label>
+            </div>
+            <div class="form-actions"><p>提交即代表你确认目标属于已授权实验范围。</p><button id="run-submit" class="button button-primary" type="submit">开始安全检查 <span aria-hidden="true">→</span></button></div>
+          </form>
+        </section>
+
+        <aside class="side-stack">
+          <section id="findings" class="panel findings-panel" aria-labelledby="findings-title">
+            <div class="panel-heading"><div><p class="section-kicker">EVIDENCE</p><h2 id="findings-title">风险发现</h2></div><span id="finding-count" class="badge badge-neutral">0 项</span></div>
+            <div id="findings-list" class="findings-list"><div class="empty-state">运行工作流后显示证据与修复建议。</div></div>
+          </section>
+          <section id="events" class="panel events-panel" aria-labelledby="events-title">
+            <div class="panel-heading"><div><p class="section-kicker">AUDIT TRAIL</p><h2 id="events-title">审计事件</h2></div></div>
+            <ol id="events-list" class="events-list"><li><span class="event-line"></span><div><time>--:--:--</time><p>系统已就绪，等待工作流启动。</p></div></li></ol>
+          </section>
+        </aside>
+      </div>
+      <footer class="page-footer"><span>Security Workflow Console</span><span>仅用于授权安全测试与修复验证</span></footer>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
