@@ -54,8 +54,30 @@ def run_workflow(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     plan = generate_attack_plan(scope["normalized"])
     execution = execute_plan(plan)
     node("planner", "规划器", "complete", f"生成 {len(plan)} 个受限步骤", plan=plan)
+
+    # 侦察节点：默认走确定性模拟；显式开启 real_exec 时改用真实执行层
+    # （真实工具 → 内置脚本 → 模拟，三级降级，见 realexec.py）
     recon = execution[0]["result"]
-    node("recon", "侦察模拟", "complete", f"识别 {len(recon['ports'])} 个演示端口", result=recon)
+    exec_record: dict[str, Any] | None = None
+    if payload.get("real_exec"):
+        from realexec import CommandRunner, ExecutionPolicy
+        policy = ExecutionPolicy(
+            enabled=True,
+            authorized=bool(payload.get("authorized")),
+            dry_run=bool(payload.get("dry_run")),
+        )
+        run = CommandRunner(policy).run_tool(
+            str(payload.get("recon_tool") or "nmap"), scope["normalized"])
+        exec_record = run.to_dict()
+        opened = run.data.get("open", []) if isinstance(run.data, dict) else []
+        node("recon", "侦察执行", "complete" if run.ok else "warning",
+             f"[{run.mode}] {run.tool}：{run.reason or '执行完成'}"
+             + (f"，发现 {len(opened)} 个开放端口" if opened else ""),
+             result=run.data or {"stdout": run.stdout}, execution=exec_record)
+        if run.ok and run.data:
+            recon = run.data
+    else:
+        node("recon", "侦察模拟", "complete", f"识别 {len(recon['ports'])} 个演示端口", result=recon)
 
     code_report = audit_code(code)
     node("code-audit", "代码审计", "complete", f"发现 {len(code_report['vulnerabilities'])} 个规则命中", result=code_report)
@@ -89,6 +111,6 @@ def run_workflow(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         "run_id": uuid.uuid4().hex[:12], "created_at": timestamp(), "status": status,
         "target": target, "objective": objective, "nodes": nodes, "events": events,
         "findings": findings, "metrics": metrics,
-        "artifacts": {"plan": plan, "execution": execution, "patch": patch_report, "binary": binary_report, "sop": sop_report, "injection_guard": injection_report},
+        "artifacts": {"plan": plan, "execution": execution, "patch": patch_report, "binary": binary_report, "sop": sop_report, "injection_guard": injection_report, "recon_exec": exec_record},
     }
 

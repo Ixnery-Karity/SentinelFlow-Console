@@ -4,3 +4,16 @@ __pycache__/
 .env
 .pytest_cache/
 *.log
+
+# 运行时产物（本地知识库 / 审计日志 / 报告）不入版本库
+data/
+reports/
+*.db
+*.db-wal
+*.db-shm
+*.jsonl
+
+# 打包产物
+dist/
+build/
+*.spec
