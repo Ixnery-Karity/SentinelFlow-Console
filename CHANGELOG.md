@@ -3,6 +3,20 @@
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 与
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
 
+## [1.1.1] - 2026-10-05
+
+### Changed — 文档与依赖工程化
+
+- **README 新增 Mermaid 架构图**：按「接口层 / 编排层 / 能力层 / 执行层 / 记忆层」五层展示模块关系，
+  并标出三级降级路径与知识库的读写回环。
+- **README 新增「三步快速启动」**：clone → 装依赖 → 跑测试 / 看 demo / 开控制台，
+  让访客在 3 条命令内看到完整效果。
+- **依赖拆分**：新增 `requirements-dev.txt`（pytest），与运行时依赖分离；
+  `requirements.txt` 补充说明哪些能力是零额外依赖的（CTF 工具箱、知识库、真实执行层）。
+- **CI 同步**：改用 `requirements-dev.txt` 安装测试依赖。
+
+> 本版本无功能变更，纯文档与工程化改进。
+
 ## [1.1.0] - 2026-10-05
 
 ### Added — CTF 解题 Agent（`ctf/` 包）

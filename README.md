@@ -73,23 +73,80 @@ python realexec.py --tool nmap --target 127.0.0.1 --real --authorized --dry-run
 - 模型输出永远不会直接进入 shell。
 - 全部能力仅限**你拥有明确授权的系统**使用（详见 [LICENSE](LICENSE) 中的合规声明）。
 
+## 架构
+
+```mermaid
+flowchart TB
+    subgraph L1["接口层"]
+        A1["Flask 控制台 app.py<br/>/api/health · /api/workflow/run · /api/audit"]
+        A2["CLI<br/>python -m ctf ..."]
+    end
+
+    subgraph L2["编排层"]
+        B1["workflow.py<br/>10 节点工作流编排"]
+        B2["ctf/solver.py<br/>CTFAgent 解题闭环"]
+    end
+
+    subgraph L3["能力层"]
+        C1["core.py<br/>8 大安全能力引擎"]
+        C2["ctf/toolbox.py<br/>20 个离线解题工具"]
+        C3["ctf/classifier.py<br/>题型识别与方案编排"]
+    end
+
+    subgraph L4["执行层"]
+        D1["realexec.py<br/>三级降级执行器"]
+        D2["scripts/*.py<br/>port_probe · http_fingerprint · dir_probe"]
+        D3["外部工具<br/>nmap · dirb · sqlmap"]
+    end
+
+    subgraph L5["记忆层"]
+        E1["ctf/knowledge.py<br/>SQLite + FTS5 知识库"]
+        E2["data/exec_audit.jsonl<br/>执行审计日志"]
+    end
+
+    A1 --> B1
+    A2 --> B2
+    B1 --> C1
+    B1 --> D1
+    B2 --> C3
+    C3 --> C2
+    B2 -.优先召回.-> E1
+    B2 -.沉淀知识卡.-> E1
+    D1 --> D3
+    D1 --> D2
+    D1 -.降级.-> D2
+    D1 --> E2
+```
+
+**三级降级**是执行层的核心：装了真实工具就用真实工具，没装就用自研脚本，都不满足才退回确定性模拟 ——
+任何环境都能跑通，且**默认不做任何有副作用的事**。
+
 ## 快速启动
 
+三步看到完整效果：
+
 ~~~powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python app.py
+git clone https://github.com/Ixnery-Karity/SentinelFlow-Console.git
+cd SentinelFlow-Console
+pip install -r requirements.txt -r requirements-dev.txt
+
+python -m pytest tests/ -q      # ① 67 项测试全绿
+python -m ctf demo              # ② 看 CTF Agent 解题 + 自主学习闭环
+python app.py                   # ③ 打开 http://127.0.0.1:5000 看控制台
 ~~~
 
-打开 http://127.0.0.1:5000。页面提供默认样例，点击"开始安全检查"即可看到完整工作流、风险指标和审计事件。
+打开控制台后页面提供默认样例，点击"开始安全检查"即可看到完整工作流、风险指标和审计事件。
 
 ## 测试
 
 ~~~powershell
-python -m pytest tests/ -q      # 全量 67 项
+python -m pytest tests/ -q      # 全量 67 项（CTF 36 + 真实执行层 31）
 python -m ctf selftest          # CTF 工具箱自检
+python -m ctf tools             # 列出全部 20 个离线工具
 ~~~
+
+CI 已配置三版本 Python 矩阵（3.11 / 3.12 / 3.13），并包含**安全边界断言**：
+默认必须是 `simulated`、公网目标必须被 `blocked` —— 谁改坏了边界，CI 会直接挂。
 
 ## API
 
@@ -128,4 +185,4 @@ python "8-间接提示词注入导致服务器RCE漏洞.py"
 
 ## 版本
 
-当前版本 **v1.1.0**（见 [CHANGELOG.md](CHANGELOG.md)）。遵循语义化版本规范：每次发布打 tag 并在 GitHub Releases 记录变更。
+当前版本 **v1.1.1**（见 [CHANGELOG.md](CHANGELOG.md)）。遵循语义化版本规范：每次发布打 tag 并在 GitHub Releases 记录变更。

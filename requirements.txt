@@ -1,4 +1,13 @@
+# —— 运行时依赖（跑控制台 / CTF Agent 只需要这些）——
+#   pip install -r requirements.txt
 Flask>=3.0,<4
 python-dotenv>=1.0,<2
 openai>=1.0,<2
 
+# —— 说明 ——
+# · openai 仅用于「可选」的 LLM 增强路径；默认 AI_ENABLED=false，
+#   不安装也能完整运行（CTF 工具箱与安全分析全部离线可用）。
+# · CTF 知识库只用标准库 sqlite3（FTS5 全文检索），无额外依赖。
+# · 真实执行层只用标准库 subprocess，无额外依赖。
+#
+# 开发/测试依赖见 requirements-dev.txt
